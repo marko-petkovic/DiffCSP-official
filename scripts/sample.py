@@ -1,51 +1,23 @@
 import time
 import argparse
+from diffcsp.script_utils import SampleDataset
 import torch
 
 from tqdm import tqdm
 from torch.optim import Adam
 from pathlib import Path
 from types import SimpleNamespace
-from torch_geometric.data import Data, Batch, DataLoader
-from torch.utils.data import Dataset
-from eval_utils import load_model, lattices_to_params_shape, get_crystals_list
+from torch_geometric.data import DataLoader
+from diffcsp.eval_utils import load_model, lattices_to_params_shape, get_crystals_list
 
 from pymatgen.core.structure import Structure
 from pymatgen.core.lattice import Lattice
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.io.cif import CifWriter
 from pyxtal.symmetry import Group
-import chemparse
-import numpy as np
 from p_tqdm import p_map
 
 import os
-
-chemical_symbols = [
-    # 0
-    'X',
-    # 1
-    'H', 'He',
-    # 2
-    'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
-    # 3
-    'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
-    # 4
-    'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-    'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
-    # 5
-    'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-    'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',
-    # 6
-    'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy',
-    'Ho', 'Er', 'Tm', 'Yb', 'Lu',
-    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi',
-    'Po', 'At', 'Rn',
-    # 7
-    'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk',
-    'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr',
-    'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc',
-    'Lv', 'Ts', 'Og']
 
 def diffusion(loader, model, step_lr):
 
@@ -73,32 +45,6 @@ def diffusion(loader, model, step_lr):
     return (
         frac_coords, atom_types, lattices, lengths, angles, num_atoms
     )
-
-class SampleDataset(Dataset):
-
-    def __init__(self, formula, num_evals):
-        super().__init__()
-        self.formula = formula
-        self.num_evals = num_evals
-        self.get_structure()
-
-    def get_structure(self):
-        self.composition = chemparse.parse_formula(self.formula)
-        chem_list = []
-        for elem in self.composition:
-            num_int = int(self.composition[elem])
-            chem_list.extend([chemical_symbols.index(elem)] * num_int)
-        self.chem_list = chem_list
-
-    def __len__(self) -> int:
-        return self.num_evals
-
-    def __getitem__(self, index):
-        return Data(
-            atom_types=torch.LongTensor(self.chem_list),
-            num_atoms=len(self.chem_list),
-            num_nodes=len(self.chem_list),
-        )
 
 def get_pymatgen(crystal_array):
     frac_coords = crystal_array['frac_coords']
