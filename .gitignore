@@ -1,3 +1,6 @@
+modified-initial-release-data/
+official_ckpts/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
