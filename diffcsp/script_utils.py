@@ -59,8 +59,8 @@ class SampleDataset(Dataset):
 
 
 train_dist = {
-    'perov_5' : [0, 0, 0, 0, 0, 1],
-    'carbon_24' : [0.0,
+    'perov' : [0, 0, 0, 0, 0, 1],
+    'carbon' : [0.0,
                 0.0,
                 0.0,
                 0.0,
