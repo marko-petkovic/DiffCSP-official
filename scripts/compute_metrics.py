@@ -14,8 +14,8 @@ from pymatgen.core.structure import Structure
 from pymatgen.core.composition import Composition
 from pymatgen.core.lattice import Lattice
 from pymatgen.analysis.structure_matcher import StructureMatcher
-# from matminer.featurizers.site.fingerprint import CrystalNNFingerprint
-# from matminer.featurizers.composition.composite import ElementProperty
+from matminer.featurizers.site.fingerprint import CrystalNNFingerprint
+from matminer.featurizers.composition.composite import ElementProperty
 
 from pyxtal import pyxtal
 
@@ -28,8 +28,8 @@ from diffcsp.eval_utils import (
     smact_validity, structure_validity, CompScaler, get_fp_pdist,
     load_config, load_data, get_crystals_list, prop_model_eval, compute_cov)
 
-# CrystalNNFP = CrystalNNFingerprint.from_preset("ops")
-# CompFP = ElementProperty.from_preset('magpie')
+CrystalNNFP = CrystalNNFingerprint.from_preset("ops")
+CompFP = ElementProperty.from_preset('magpie')
 
 Percentiles = {
     'mp20': np.array([-3.17562208, -2.82196882, -2.52814761]),
@@ -101,20 +101,20 @@ class Crystal(object):
             self.struct_valid = False
         self.valid = self.comp_valid and self.struct_valid
 
-    # def get_fingerprints(self):
-    #     elem_counter = Counter(self.atom_types)
-    #     comp = Composition(elem_counter)
-    #     self.comp_fp = CompFP.featurize(comp)
-    #     try:
-    #         site_fps = [CrystalNNFP.featurize(
-    #             self.structure, i) for i in range(len(self.structure))]
-    #     except Exception:
-    #         # counts crystal as invalid if fingerprint cannot be constructed.
-    #         self.valid = False
-    #         self.comp_fp = None
-    #         self.struct_fp = None
-    #         return
-    #     self.struct_fp = np.array(site_fps).mean(axis=0)
+    def get_fingerprints(self):
+        elem_counter = Counter(self.atom_types)
+        comp = Composition(elem_counter)
+        self.comp_fp = CompFP.featurize(comp)
+        try:
+            site_fps = [CrystalNNFP.featurize(
+                self.structure, i) for i in range(len(self.structure))]
+        except Exception:
+            # counts crystal as invalid if fingerprint cannot be constructed.
+            self.valid = False
+            self.comp_fp = None
+            self.struct_fp = None
+            return
+        self.struct_fp = np.array(site_fps).mean(axis=0)
 
 
 class RecEval(object):
