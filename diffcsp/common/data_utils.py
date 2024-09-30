@@ -1153,6 +1153,10 @@ class StandardScalerTorch(object):
 def get_scaler_from_data_list(data_list, key):
     dl = np.asarray([d[key] for d in data_list])
     targets = torch.from_numpy(dl)
+    # check for nans/infs in targets
+    if torch.isnan(targets).any() or torch.isinf(targets).any():
+        # impute nans with mean
+        targets[torch.isnan(targets)] = targets[~torch.isnan(targets)].mean()
     scaler = StandardScalerTorch()
     scaler.fit(targets)
     return scaler
